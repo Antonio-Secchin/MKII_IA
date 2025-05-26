@@ -18,7 +18,7 @@ pip3 install -e .
 
 Clone o repositório:
 ```sh
-https://github.com/Antonio-Secchin/MKII_IA.git
+git clone https://github.com/Antonio-Secchin/MKII_IA.git
 ```
 
 Será necessário conseguir uma versão da ROM de Mortal Kombat II Genesis do Super Nintendo Entertainment System (SNES) (.bin), depois execute na pasta do arquivo
