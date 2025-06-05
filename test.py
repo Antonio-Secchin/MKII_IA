@@ -1,29 +1,55 @@
 import sys
 import retro
 
+import gymnasium as gym
+
+import numpy as np
+
 from stable_baselines3 import PPO
 
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, SubprocVecEnv
 
-# Ambiente para TREINAMENTO sem render
-#Testar com VecFrameStack: it stacks several consecutive observations
-train_env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', render_mode=None)
-train_env = DummyVecEnv([lambda: train_env])
+from gymnasium import Wrapper
 
-obs = train_env.reset()
-print(obs.shape)
-#sys.exit(0)
+from model_callback import EvalCallback
 
-# Treinar o modelo
-#LstmPolicy
-model = PPO("MlpPolicy", train_env, verbose=1)
-model.learn(total_timesteps=15_000)
-train_env.close()
+
+#### Game States: #####
+###
+# env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P')
+# env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', render_mode = None)
+###
+
+def make_env():
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', render_mode = None)
+    return env
+
+def make_eval_env():
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', render_mode = None)
+    return env
 
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env():
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', render_mode="human")
     return env
+
+    
+
+# Torna o ambiente vetorizado (requerido por SB3)
+vec_env = DummyVecEnv([make_env])
+
+# Adiciona VecFrameStack (ex: 4 frames empilhados)
+stacked_env = VecFrameStack(vec_env, n_stack=4, channels_order='last')
+
+# Treinar o modelo
+#LstmPolicy
+eval_callback = EvalCallback(eval_env=stacked_env, save_dir = "Models")
+
+model = PPO("MlpPolicy", stacked_env, verbose=0)
+model.learn(total_timesteps=30_000, progress_bar=True, callback= eval_callback)
+stacked_env.close()
+
+
 
 eval_env = DummyVecEnv([make_render_env])
 obs = eval_env.reset()
@@ -36,22 +62,3 @@ while True:
 
     if done[0]:  # `done` é uma lista/vetor no DummyVecEnv
         obs = eval_env.reset()
-
-#env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P')
-# env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', render_mode = None)
-
-# model = A2C("MlpPolicy", env, verbose=1)
-# model.learn(total_timesteps=10_000)
-# #obs = env.reset()
-
-# vec_env = model.get_env()
-# obs = vec_env.reset()
-
-# while True:
-
-#     action, _state = model.predict(obs, deterministic=True)
-#     obs, reward, done, info = vec_env.step(action)
-#     vec_env.render("human")
-
-#     if done:
-#         obs = env.reset()
