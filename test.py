@@ -77,14 +77,16 @@ while True:
     start_time = time.time()
     #print("obs:", obs)
     #action, _ = model.predict(obs, deterministic=False)
+    sample = env.action_space.sample()
     obs, reward, done, truncated, info = env.step(sample)
     if reward>0:
         print(reward)
+        print(env.get_action_meaning(sample))
     if done:  # `done` é uma lista/vetor no DummyVecEnv
         obs = env.reset()
-    elapsed = time.time() - start_time
-    sleep_time = max(0.0, frame_time - elapsed)
-    time.sleep(sleep_time)
+    # elapsed = time.time() - start_time
+    # sleep_time = max(0.0, frame_time - elapsed)
+    # time.sleep(sleep_time)
 # #Torna o ambiente vetorizado (requerido por SB3)
 # vec_env = DummyVecEnv([make_env])
 
