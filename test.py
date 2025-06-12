@@ -36,19 +36,30 @@ def make_render_env():
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode="human")
     return env
 
-    
 
-#Torna o ambiente vetorizado (requerido por SB3)
-vec_env = DummyVecEnv([make_env])
+env =make_render_env()
+sample = env.action_space.sample() # [1 1 1 0 0 0 0 0 1 1 0 0]
+print(sample)
 
-# Adiciona VecFrameStack (ex: 4 frames empilhados)
-# Obs: 4 frames empilhados eh muito para o notebook (talvez o processador ou 16gb de RAM)
-stacked_env = VecFrameStack(vec_env, n_stack=2, channels_order='last')
+obs = env.reset()
+# Loop de execução com render
+while True:
+    #print("obs:", obs)
+    #action, _ = model.predict(obs, deterministic=False)
+    obs, reward, done, truncated, info = env.step(sample)
+    if done:  # `done` é uma lista/vetor no DummyVecEnv
+        obs = env.reset()
+# #Torna o ambiente vetorizado (requerido por SB3)
+# vec_env = DummyVecEnv([make_env])
 
-# Treinar o modelo
-#LstmPolicy
-eval_callback = EvalCallback(eval_env=stacked_env, save_dir = "Models", generate_graphic=True)
+# # Adiciona VecFrameStack (ex: 4 frames empilhados)
+# # Obs: 4 frames empilhados eh muito para o notebook (talvez o processador ou 16gb de RAM)
+# stacked_env = VecFrameStack(vec_env, n_stack=2, channels_order='last')
 
-model = PPO("MlpPolicy", stacked_env, verbose=0)
-model.learn(total_timesteps=20_000, progress_bar=True, callback= eval_callback)
-stacked_env.close()
+# # Treinar o modelo
+# #LstmPolicy
+# eval_callback = EvalCallback(eval_env=stacked_env, save_dir = "Models", generate_graphic=True)
+
+# model = PPO("MlpPolicy", stacked_env, verbose=0)
+# model.learn(total_timesteps=20_000, progress_bar=True, callback= eval_callback)
+# stacked_env.close()

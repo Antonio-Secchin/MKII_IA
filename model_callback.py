@@ -3,7 +3,6 @@ import numpy as np
 import os
 
 from stable_baselines3.common.callbacks import BaseCallback
-from tqdm.auto import tqdm
 
 #TODO Fazer o callback do grafico, falta fazer um processamento nos dados para ficar uma reta
 
