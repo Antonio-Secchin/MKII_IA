@@ -40,9 +40,10 @@ def make_eval_env():
     return env
 
 # Ambiente para EXECUÇÃO com renderização
-def make_render_env():
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode="human")
-    return env
+def make_render_env(var_names):
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.IMAGE, render_mode="human")
+    wraper_env = InfoActionHistoryWrapper(env, var_names, 10)
+    return wraper_env
 
 
 variables = [
@@ -60,14 +61,14 @@ variables = [
     
 
 #Torna o ambiente vetorizado (requerido por SB3)
-#vec_env = DummyVecEnv([make_env])
-info_env = make_info_env(variables)
-vec_env = DummyVecEnv([lambda:info_env])
+vec_env = DummyVecEnv([make_env])
+#info_env = make_env(variables)
+#vec_env = DummyVecEnv([lambda:info_env])
 
 
 # Adiciona VecFrameStack (ex: 4 frames empilhados)
 # Obs: 4 frames empilhados eh muito para o notebook (talvez o processador ou 16gb de RAM)
-stacked_env = VecFrameStack(vec_env, n_stack=8, channels_order='last')
+#stacked_env = VecFrameStack(vec_env, n_stack=8, channels_order='last')
 
 # Treinar o modelo
 #LstmPolicy

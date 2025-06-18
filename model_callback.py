@@ -24,10 +24,12 @@ class EvalCallback(BaseCallback):
         self._save_path = os.path.join(save_dir, "newest_model")
         self._graph_path = os.path.join(save_dir, "reward_plot.png")
         self._rollouts_done = 0
+        self._rollout_reward = 0
         self._means_rewards = []
         self._generate_graphic = generate_graphic
 
     def _on_step(self) -> bool:
+        self._rollout_reward += self.locals["rewards"]
         return True
 
     def _on_rollout_end(self) -> None:
@@ -46,7 +48,7 @@ class EvalCallback(BaseCallback):
             obs = self._eval_env.reset()
             done = False
             while not done:
-                action, _ = self.model.predict(obs, deterministic=True)
+                action, _ = self.model.predict(obs, deterministic=False)
                 obs, reward, done, info = self._eval_env.step(action)
                 reward_sum += reward
         reward_mean = reward_sum/self._n_eval_episodes
@@ -56,7 +58,9 @@ class EvalCallback(BaseCallback):
         if reward_mean > self._best_mean_reward:
             self._best_mean_reward = reward_mean
             self.model.save(self._save_path)
-
+        
+        self._rollout_reward = 0
+        print("Rollout reward: ", self.locals["rewards"])
         print("Best mean reward: {:.2f}".format(float(self._best_mean_reward)))
 
     def _on_training_end(self) -> None:

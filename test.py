@@ -57,7 +57,7 @@ target_fps = 30
 frame_time = 1.0 / target_fps
 
 env = make_render_env()
-sample = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]#env.action_space.sample() # [1 1 1 0 0 0 0 0 1 1 0 0]
+sample = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]#env.action_space.sample() # [1 1 1 0 0 0 0 0 1 1 0 0]
 actions = []
 # for p, action in enumerate(env.action_to_array(sample)):
 #     actions.append(
@@ -72,21 +72,23 @@ print(env.get_action_meaning(sample))
 #     sample = np.roll(sample,1,0)
 
 obs = env.reset()
+i = 0
+space = 5
 # Loop de execução com render
 while True:
     start_time = time.time()
-    #print("obs:", obs)
-    #action, _ = model.predict(obs, deterministic=False)
-    sample = env.action_space.sample()
     obs, reward, done, truncated, info = env.step(sample)
+    if i == 1:
+        sample = [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+        i = 0
+    else:
+        sample = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
     if reward>0:
         print(reward)
         print(env.get_action_meaning(sample))
-    if done:  # `done` é uma lista/vetor no DummyVecEnv
-        obs = env.reset()
-    # elapsed = time.time() - start_time
-    # sleep_time = max(0.0, frame_time - elapsed)
-    # time.sleep(sleep_time)
+    if done or truncated:  # `done` é uma lista/vetor no DummyVecEnv
+        break
 # #Torna o ambiente vetorizado (requerido por SB3)
 # vec_env = DummyVecEnv([make_env])
 

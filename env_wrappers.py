@@ -64,8 +64,10 @@ class LastActionsWrapper(gym.Wrapper):
     
 
 
+
+
 class InfoActionHistoryWrapper(Wrapper):
-    def __init__(self, env, var_names, n_actions):
+    def __init__(self, env, var_names, n_actions, interval = 1):
         super().__init__(env)
         self.var_names = var_names
         self.n_actions = n_actions
@@ -92,7 +94,6 @@ class InfoActionHistoryWrapper(Wrapper):
 
         # Zera histórico de ações
         self.last_actions[:] = 0.0
-
         # Concatena obs de info + histórico de ações
         obs = self._extract(info)
         return np.concatenate([obs, self.last_actions.flatten()]), info
