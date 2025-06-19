@@ -61,9 +61,9 @@ variables = [
     
 
 #Torna o ambiente vetorizado (requerido por SB3)
-vec_env = DummyVecEnv([make_env])
-#info_env = make_env(variables)
-#vec_env = DummyVecEnv([lambda:info_env])
+#vec_env = DummyVecEnv([make_env])
+info_env = make_info_env(variables)
+vec_env = DummyVecEnv([lambda:info_env])
 
 
 # Adiciona VecFrameStack (ex: 4 frames empilhados)

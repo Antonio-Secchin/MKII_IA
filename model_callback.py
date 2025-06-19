@@ -15,7 +15,7 @@ class EvalCallback(BaseCallback):
     :param eval_freq: (int) Evaluate the agent every eval_freq call of the callback.
     """
 
-    def __init__(self, eval_env, save_dir,n_eval_episodes=5, eval_freq=5, generate_graphic = False):
+    def __init__(self, eval_env, save_dir,n_eval_episodes=3, eval_freq=10, generate_graphic = False):
         super().__init__()
         self._eval_env = eval_env
         self._n_eval_episodes = n_eval_episodes
@@ -23,8 +23,10 @@ class EvalCallback(BaseCallback):
         self._best_mean_reward = -np.inf
         self._save_path = os.path.join(save_dir, "newest_model")
         self._graph_path = os.path.join(save_dir, "reward_plot.png")
+        self._save_path_models_rollout = os.path.join(save_dir, "RolloutModels/")
         self._rollouts_done = 0
         self._rollout_reward = 0
+        self._rollout_rewards_value = []
         self._means_rewards = []
         self._generate_graphic = generate_graphic
 
@@ -41,8 +43,11 @@ class EvalCallback(BaseCallback):
 
         self._rollouts_done += 1
         if self._rollouts_done % self._eval_freq != 0:
+            self._rollout_reward = 0
             return  # Só avalia a cada `eval_freq` rollouts
 
+        self._rollout_rewards_value.append(self._rollout_reward)
+        self._rollout_reward = 0
         reward_sum = 0
         for _ in range(self._n_eval_episodes):
             obs = self._eval_env.reset()
@@ -52,18 +57,25 @@ class EvalCallback(BaseCallback):
                 obs, reward, done, info = self._eval_env.step(action)
                 reward_sum += reward
         reward_mean = reward_sum/self._n_eval_episodes
+
+        if reward_mean > self._best_mean_reward:
+            print("New Reward Best Mean:", reward_mean)
+            self._best_mean_reward = reward_mean
+            self.model.save(self._save_path)
+
         if self._generate_graphic:
             self._means_rewards.append(reward_mean)
 
-        if reward_mean > self._best_mean_reward:
-            self._best_mean_reward = reward_mean
-            self.model.save(self._save_path)
-        
-        self._rollout_reward = 0
-        print("Rollout reward: ", self.locals["rewards"])
-        print("Best mean reward: {:.2f}".format(float(self._best_mean_reward)))
+        filename = os.path.join(self._save_path_models_rollout, f"Model_Rollout_{self._rollouts_done}.zip")
+        self.model.save(filename)
+        print(f"✅ Modelo salvo em {filename}")
 
     def _on_training_end(self) -> None:
+        filename = os.path.join(self._save_path_models_rollout, "RewardsTrain.csv")
+        with open(filename, "w") as f:
+            f.write("rollout,reward\n")
+            for i, r in enumerate(self._rollout_rewards_value):
+                f.write(f"{(i+1) * self._eval_freq},{r}\n")
         if self._generate_graphic and not self._means_rewards:
             print("Nenhuma avaliação registrada. Gráfico não será gerado.")
             return
