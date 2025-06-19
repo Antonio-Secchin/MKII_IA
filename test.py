@@ -47,7 +47,7 @@ def make_env():
 def make_eval_env():
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode = None)
     return env
-
+#Level1.SubZeroVsRyden
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env():
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode="human")
@@ -57,7 +57,7 @@ target_fps = 30
 frame_time = 1.0 / target_fps
 
 env = make_render_env()
-sample = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]#env.action_space.sample() # [1 1 1 0 0 0 0 0 1 1 0 0]
+sample = [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]#env.action_space.sample() # [1 1 1 0 0 0 0 0 1 1 0 0]
 actions = []
 # for p, action in enumerate(env.action_to_array(sample)):
 #     actions.append(
@@ -75,15 +75,23 @@ obs = env.reset()
 i = 0
 space = 5
 # Loop de execução com render
+#10 so golpe especial
+#12 anda pra frente dando golpe especial
+#13 de intervalo ele para o golpe mas ainda nao eh tempo para ele ficar andando pra frente, ele dá soco pra frente
+#20 ele anda pra frente socando
 while True:
     start_time = time.time()
     obs, reward, done, truncated, info = env.step(sample)
-    if i == 1:
-        sample = [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+    if i == 0:
+        sample = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+    elif i == 10:
+        sample = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+    elif i == 20:
+        sample = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         i = 0
     else:
         sample = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        i += 1
+    i += 1
     if reward>0:
         print(reward)
         print(env.get_action_meaning(sample))
