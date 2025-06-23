@@ -6,7 +6,7 @@ import gymnasium as gym
 
 import numpy as np
 
-from stable_baselines3 import PPO,A2C
+from stable_baselines3 import PPO,A2C, DQN
 
 from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, SubprocVecEnv
 
@@ -27,12 +27,12 @@ from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper
 # rew will be a list of [player_1_rew, player_2_rew]
 def make_env():
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode = None)
-    wraper_env = LastActionsWrapper(env, 10)
+    wraper_env = LastActionsWrapper(env, n_actions=10)
     return wraper_env
 
 def make_info_env(var_names):
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode = None)
-    wraper_env = InfoActionHistoryWrapper(env, var_names, 10)
+    wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 def make_eval_env():
@@ -42,7 +42,7 @@ def make_eval_env():
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env(var_names):
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.IMAGE, render_mode="human")
-    wraper_env = InfoActionHistoryWrapper(env, var_names, 10)
+    wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 
@@ -72,7 +72,7 @@ vec_env = DummyVecEnv([lambda:info_env])
 
 # Treinar o modelo
 #LstmPolicy
-eval_callback = EvalCallback(eval_env=vec_env, save_dir = "Models", generate_graphic=True)
+eval_callback = EvalCallback(eval_env=vec_env, save_dir = "Models", generate_graphic=True, eval_freq=3)
 
 model = None
 if len(sys.argv) > 1:
@@ -80,9 +80,10 @@ if len(sys.argv) > 1:
         path = sys.argv[2]
         model = PPO.load(path, vec_env)
 else:
+    #DQN precisa mudar o action space entao provavelmente teria que fazer uma conexao entre um espaco discreto e o multi_binary
     model = PPO("MlpPolicy", vec_env, verbose=0)
 #model.load("Models/newest_model.zip")
-model.learn(total_timesteps=1000_000, progress_bar=True, callback= eval_callback)
+model.learn(total_timesteps=50_000, progress_bar=True, callback= eval_callback)
 vec_env.close()
 
 #eval_env = DummyVecEnv([make_render_env])

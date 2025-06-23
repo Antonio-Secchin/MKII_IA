@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from scipy.interpolate import make_interp_spline
 import numpy as np
 import os
 
@@ -75,19 +76,30 @@ class EvalCallback(BaseCallback):
         with open(filename, "w") as f:
             f.write("rollout,reward\n")
             for i, r in enumerate(self._rollout_rewards_value):
-                f.write(f"{(i+1) * self._eval_freq},{r}\n")
+                f.write(f"{(i+1) * self._eval_freq},{int(r)}\n")
         if self._generate_graphic and not self._means_rewards:
             print("Nenhuma avaliação registrada. Gráfico não será gerado.")
             return
 
-        x = [(i + 1) * self._eval_freq for i in range(len(self._means_rewards))]
+        x = np.array([(i + 1) * self._eval_freq for i in range(len(self._means_rewards))])
+        y = np.array(self._means_rewards)
 
         plt.figure(figsize=(10, 6))
-        plt.plot(x, self._means_rewards, marker='o', linestyle='-')
+
+        if len(x) >= 4:  # spline cúbica requer pelo menos 4 pontos
+            x_smooth = np.linspace(x.min(), x.max(), 300)
+            spline = make_interp_spline(x, y, k=3)
+            y_smooth = spline(x_smooth)
+            plt.plot(x_smooth, y_smooth, label="Recompensa Média (Suavizada)", linewidth=2)
+        else:
+            # poucos dados, plota direto
+            plt.plot(x, y, marker='o', linestyle='-', label="Recompensa Média")
+
         plt.title("Evolução da Recompensa Média")
         plt.xlabel("Rollouts Realizados")
         plt.ylabel("Recompensa Média")
         plt.grid(True)
+        plt.legend()
         plt.savefig(self._graph_path)
         plt.close()
 
