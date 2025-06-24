@@ -26,12 +26,12 @@ from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper
 #Usar players=<n> para colocar mais de um jogador/agente
 # rew will be a list of [player_1_rew, player_2_rew]
 def make_env():
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
     wraper_env = LastActionsWrapper(env, n_actions=10)
     return wraper_env
 
 def make_info_env(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
     wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
@@ -62,7 +62,7 @@ variables = [
 
 #Torna o ambiente vetorizado (requerido por SB3)
 #vec_env = DummyVecEnv([make_env])
-info_env = make_info_env(variables)
+info_env = make_env()
 vec_env = DummyVecEnv([lambda:info_env])
 
 
@@ -72,7 +72,7 @@ vec_env = DummyVecEnv([lambda:info_env])
 
 # Treinar o modelo
 #LstmPolicy
-eval_callback = EvalCallback(eval_env=vec_env, save_dir = "Models", generate_graphic=True, eval_freq=3)
+eval_callback = EvalCallback(eval_env=vec_env, save_dir = "Models", generate_graphic=True, eval_freq=10)
 
 model = None
 if len(sys.argv) > 1:
@@ -83,7 +83,7 @@ else:
     #DQN precisa mudar o action space entao provavelmente teria que fazer uma conexao entre um espaco discreto e o multi_binary
     model = PPO("MlpPolicy", vec_env, verbose=0)
 #model.load("Models/newest_model.zip")
-model.learn(total_timesteps=50_000, progress_bar=True, callback= eval_callback)
+model.learn(total_timesteps=1000_000, progress_bar=True, callback= eval_callback)
 vec_env.close()
 
 #eval_env = DummyVecEnv([make_render_env])
