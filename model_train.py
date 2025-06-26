@@ -66,7 +66,7 @@ variables = [
 
 #Torna o ambiente vetorizado (requerido por SB3)
 #vec_env = DummyVecEnv([make_env])
-info_env = make_info_env(variables)
+info_env = make_render_env(variables)
 vec_env = DummyVecEnv([lambda:info_env])
 
 
@@ -85,7 +85,7 @@ if len(sys.argv) > 1:
         model = PPO.load(path, vec_env)
 else:
     #DQN precisa mudar o action space entao provavelmente teria que fazer uma conexao entre um espaco discreto e o multi_binary
-    model = PPO("MlpPolicy", vec_env, verbose=0)
+    model = DQN("MlpPolicy", vec_env, verbose=0)
 #model.load("Models/newest_model.zip")
 model.learn(total_timesteps=1000_000, progress_bar=True, callback= eval_callback)
 vec_env.close()

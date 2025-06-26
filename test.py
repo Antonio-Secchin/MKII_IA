@@ -79,24 +79,28 @@ space = 5
 #12 anda pra frente dando golpe especial
 #13 de intervalo ele para o golpe mas ainda nao eh tempo para ele ficar andando pra frente, ele dá soco pra frente
 #20 ele anda pra frente socando
-while True:
-    start_time = time.time()
-    obs, reward, done, truncated, info = env.step(sample)
-    if i == 0:
-        sample = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
-    elif i == 10:
-        sample = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
-    elif i == 20:
-        sample = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        i = 0
-    else:
-        sample = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    i += 1
-    if reward>0:
-        print(reward)
-        print(env.get_action_meaning(sample))
-    if done or truncated:  # `done` é uma lista/vetor no DummyVecEnv
-        break
+for _ in range(10):
+    obs = env.reset()
+    while True:
+        start_time = time.time()
+        obs, reward, done, truncated, info = env.step(sample)
+        if i == 1:
+            sample = [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+            # sample = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+        elif i == 12:
+            sample =  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+            i= 0
+        # elif i == 24:
+        #     sample = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        #     i = 0
+        else:
+            sample = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        if reward>0:
+            print(reward)
+            print(env.get_action_meaning(sample))
+        if done or truncated:  # `done` é uma lista/vetor no DummyVecEnv
+            break
 # #Torna o ambiente vetorizado (requerido por SB3)
 # vec_env = DummyVecEnv([make_env])
 
