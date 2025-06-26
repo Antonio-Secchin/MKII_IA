@@ -1,0 +1,1 @@
+Parece que o rollout dura mais que uma jogada como pode observar no csv, há vezes que os pontos é maior que a quantidade de vida * 10 (1200)
