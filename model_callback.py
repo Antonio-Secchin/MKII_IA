@@ -72,11 +72,11 @@ class EvalCallback(BaseCallback):
         print(f"✅ Modelo salvo em {filename}")
 
     def _on_training_end(self) -> None:
-        filename = os.path.join(self._save_path_models_rollout, "RewardsTrain.csv")
-        with open(filename, "w") as f:
-            f.write("rollout,reward\n")
-            for i, r in enumerate(self._rollout_rewards_value):
-                f.write(f"{(i+1) * self._eval_freq},{int(r)}\n")
+        # filename = os.path.join(self._save_path_models_rollout, "RewardsTrain.csv")
+        # with open(filename, "w") as f:
+        #     f.write("rollout,reward\n")
+        #     for i, r in enumerate(self._rollout_rewards_value):
+        #         f.write(f"{(i+1) * self._eval_freq},{int(r)}\n")
         if self._generate_graphic and not self._means_rewards:
             print("Nenhuma avaliação registrada. Gráfico não será gerado.")
             return

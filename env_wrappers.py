@@ -8,16 +8,18 @@ import numpy as np
 
 from gymnasium import Wrapper
 
+NoAction = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 class LastActionsWrapper(gym.Wrapper):
     """
     :param env: (gym.Env) Gym environment that will be wrapped
     """
 
-    def __init__(self, env, n_actions):
+    def __init__(self, env, n_actions, steps_between_actions = 11):
         # Call the parent constructor, so we can access self.env later
         super().__init__(env)
         self.n_actions = n_actions
+        self.steps_between_actions = steps_between_actions
 
         sample = self.env.action_space.sample()
         self.action_size = sample.size if isinstance(sample, np.ndarray) else 1
@@ -27,7 +29,7 @@ class LastActionsWrapper(gym.Wrapper):
         orig_obs_space = self.env.observation_space
         obs_size = orig_obs_space.shape[0] if isinstance(orig_obs_space, gym.spaces.Box) else len(orig_obs_space)
         new_obs_dim = obs_size + self.n_actions * self.action_size
-
+        
         self.observation_space = gym.spaces.Box(
             low=-np.inf, high=np.inf, shape=(new_obs_dim,), dtype=np.float32
         )  
@@ -67,10 +69,11 @@ class LastActionsWrapper(gym.Wrapper):
 
 
 class InfoActionHistoryWrapper(Wrapper):
-    def __init__(self, env, var_names, n_actions, interval = 1):
+    def __init__(self, env, var_names, n_actions, steps_between_actions = 11):
         super().__init__(env)
         self.var_names = var_names
         self.n_actions = n_actions
+        self.steps_between_actions = steps_between_actions
 
         # Amostra para descobrir dimensão da ação
         sample = self.env.action_space.sample()
@@ -107,13 +110,20 @@ class InfoActionHistoryWrapper(Wrapper):
 
         self.last_actions = np.roll(self.last_actions, 1, 0)
         self.last_actions[0] = action_vec
-
+        
+        total_reward = 0
         # Executa o step no env original
         obs, reward, terminated, truncated, info = self.env.step(action)
+        total_reward += reward
 
+        for _ in range(self.steps_between_actions):
+            obs, reward, terminated, truncated, info = self.env.step(NoAction)
+            total_reward += reward
+            if terminated or truncated:
+                break
         # Concatena obs de info + histórico de ações
         obs = self._extract(info)
-        return np.concatenate([obs, self.last_actions.flatten()]), reward, terminated, truncated, info
+        return np.concatenate([obs, self.last_actions.flatten()]), total_reward, terminated, truncated, info
 
     def _extract(self, info):
         # Monta vetor [ info[var] for var in var_names ]
