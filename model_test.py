@@ -81,7 +81,7 @@ if len(sys.argv) > 1:
         model = PPO.load(path, vec_env)
 else:
     model = PPO("MlpPolicy", vec_env, verbose=0)
-
+print(type(vec_env.action_space))
 frames = []
 obs = vec_env.reset()
 # Loop de execução com render

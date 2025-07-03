@@ -57,7 +57,7 @@ target_fps = 30
 frame_time = 1.0 / target_fps
 
 env = make_render_env()
-sample = [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]#env.action_space.sample() # [1 1 1 0 0 0 0 0 1 1 0 0]
+sample = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]#env.action_space.sample() # [1 1 1 0 0 0 0 0 1 1 0 0]
 actions = []
 # for p, action in enumerate(env.action_to_array(sample)):
 #     actions.append(
@@ -84,17 +84,15 @@ for _ in range(10):
     while True:
         start_time = time.time()
         obs, reward, done, truncated, info = env.step(sample)
-        if i == 1:
-            sample = [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+        if i == 100:
+            sample = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             # sample = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
-        elif i == 12:
-            sample =  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+        elif i == 231:
+            sample =  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             i= 0
         # elif i == 24:
         #     sample = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         #     i = 0
-        else:
-            sample = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         i += 1
         if reward>0:
             print(reward)

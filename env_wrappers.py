@@ -10,6 +10,15 @@ from gymnasium import Wrapper
 
 NoAction = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+FogoBaixo = [[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Voadora = [[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
+
+#5 segundos
+Chute_Bicicleta = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+#Bola de Fogo Alta : Frente, Frente, Soco Alto, No emulador nao tem soco alto por controle
+
 class LastActionsWrapper(gym.Wrapper):
     """
     :param env: (gym.Env) Gym environment that will be wrapped
@@ -81,7 +90,7 @@ class InfoActionHistoryWrapper(Wrapper):
 
         # Buffer das últimas n_actions
         self.last_actions = np.zeros((self.n_actions, self.action_size), dtype=np.float32)
-
+        self.n_steps = 0
         # Espaço de observação: |vars| + n_actions * action_size
         obs_dim = len(self.var_names)
         total_dim = obs_dim + self.n_actions * self.action_size
@@ -103,6 +112,7 @@ class InfoActionHistoryWrapper(Wrapper):
 
     def step(self, action):
         # Atualiza buffer de ações
+        self.n_steps += 1
         if isinstance(action, (int, np.integer)):
             action_vec = np.array([action], dtype=np.float32)
         else:
@@ -121,6 +131,112 @@ class InfoActionHistoryWrapper(Wrapper):
             total_reward += reward
             if terminated or truncated:
                 break
+        # Concatena obs de info + histórico de ações
+        obs = self._extract(info)
+        return np.concatenate([obs, self.last_actions.flatten()]), total_reward, terminated, truncated, info
+
+    def _extract(self, info):
+        # Monta vetor [ info[var] for var in var_names ]
+        vals = [ info.get(var, 0.0) for var in self.var_names ]
+        return np.array(vals, dtype=np.float32)
+    
+
+#Wrapper para testar as actions compostas
+class TestActionWrapper(Wrapper):
+    def __init__(self, env, var_names, n_actions, steps_between_actions = 11):
+        super().__init__(env)
+        self.var_names = var_names
+        self.n_actions = n_actions
+        self.steps_between_actions = steps_between_actions
+
+        # Amostra para descobrir dimensão da ação
+        sample = self.env.action_space.sample()
+        self.action_size = sample.size if isinstance(sample, np.ndarray) else 1
+
+        # Buffer das últimas n_actions
+        self.last_actions = np.zeros((self.n_actions, self.action_size), dtype=np.float32)
+
+        # Espaço de observação: |vars| + n_actions * action_size
+        obs_dim = len(self.var_names)
+        total_dim = obs_dim + self.n_actions * self.action_size
+        self.observation_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf,
+            shape=(total_dim,), dtype=np.float32
+        )
+        #TODO: Ver essa seed
+        self.action_space = gym.spaces.MultiBinary(np.array(16))
+        # Reward/Action/Info spaces seguem do env original
+
+    def reset(self, **kwargs):
+        # Lida com Gym >=0.26 (obs, info) e Gym <0.26 (obs)
+        obs, info = self.env.reset(**kwargs)
+
+        # Zera histórico de ações
+        self.last_actions[:] = 0.0
+        # Concatena obs de info + histórico de ações
+        obs = self._extract(info)
+        return np.concatenate([obs, self.last_actions.flatten()]), info
+
+    def step(self, action):
+        # Atualiza buffer de ações
+        if isinstance(action, (int, np.integer)):
+            action_vec = np.array([action], dtype=np.float32)
+        else:
+            action_vec = action
+
+        self.last_actions = np.roll(self.last_actions, 1, 0)
+        self.last_actions[0] = action_vec
+        sum_actions = np.sum(action)
+
+        total_reward = 0
+
+        if(action[-1] == 1 and sum_actions ==1):
+            #Executa um golpe especial Voadora
+            for act in Voadora:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
+                if terminated or truncated:
+                    break
+        
+        if(action[-2] == 1 and sum_actions ==1):
+            #Executa um golpe especial Fogo Baixo
+            for act in FogoBaixo:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
+
+        if(action[-3] == 1 and sum_actions ==1):
+            #Executa um golpe especial Chute Bicicleta, outras acoes podem ser executadas enquanto carrega o chute, entao talvez deixar fixo por um tempo? Eu prefiro deixar fixo
+            for _ in range(231):
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+        
+        else:
+            # Executa o step no env original
+            #TODO Ver como tratar o caso de ter acao especial com acao normal ex:[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]
+            #Isso pega os 12 primeiros ne?
+            action = action[:12]
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            total_reward += reward
+
+            for _ in range(self.steps_between_actions):
+                obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                total_reward += reward
+                if terminated or truncated:
+                    break
         # Concatena obs de info + histórico de ações
         obs = self._extract(info)
         return np.concatenate([obs, self.last_actions.flatten()]), total_reward, terminated, truncated, info

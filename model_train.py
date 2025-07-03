@@ -6,7 +6,7 @@ import gymnasium as gym
 
 import numpy as np
 
-from stable_baselines3 import PPO, PPO2, A2C, DQN
+from stable_baselines3 import PPO, A2C, DQN
 
 from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, SubprocVecEnv
 
@@ -112,6 +112,7 @@ if __name__ == "__main__":
             path = sys.argv[2]
             model = PPO.load(path, vec_env)
     else:
-        model = PPO("MlpPolicy", vec_env_para, verbose=0, device='cpu')
-    model.learn(total_timesteps=4000_000, progress_bar=True, callback= eval_callback)
+        model = PPO("MlpPolicy", vec_env, verbose=0, device='cpu')
+    model.learn(total_timesteps=200_000, progress_bar=True, callback= eval_callback)
+    print("Qtd de calls do wrapper.step: ", eval_env.n_steps)
     vec_env.close()
