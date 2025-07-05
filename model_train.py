@@ -16,7 +16,7 @@ from stable_baselines3.common.atari_wrappers import MaxAndSkipEnv
 
 from model_callback import EvalCallback
 
-from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper
+from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper, TestActionWrapper
 
 import multiprocessing
 
@@ -38,14 +38,13 @@ def make_info_env_fn(var_names, seed=0):
             obs_type=Observations.RAM,
             render_mode=None
         )
-        wrapped_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
-        #return MaxAndSkipEnv(wrapped_env,12)
+        wrapped_env = TestActionWrapper(env, var_names=var_names, n_actions=10)
         return wrapped_env
     return _init
 
 def make_env():
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
-    wraper_env = LastActionsWrapper(env, n_actions=10)
+    wraper_env = TestActionWrapper(env, n_actions=10)
     return wraper_env
 
 def make_env_image():
@@ -59,7 +58,7 @@ def make_info_env(var_names):
 
 def make_eval_env(var_names):
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
-    wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
+    wraper_env = TestActionWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 # Ambiente para EXECUÇÃO com renderização
@@ -114,5 +113,4 @@ if __name__ == "__main__":
     else:
         model = PPO("MlpPolicy", vec_env, verbose=0, device='cpu')
     model.learn(total_timesteps=200_000, progress_bar=True, callback= eval_callback)
-    print("Qtd de calls do wrapper.step: ", eval_env.n_steps)
     vec_env.close()

@@ -7,7 +7,7 @@ from stable_baselines3 import PPO,A2C, DQN
 from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, SubprocVecEnv, VecVideoRecorder
 
 
-from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper
+from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper,TestActionWrapper
 
 import imageio
 
@@ -40,8 +40,8 @@ def make_eval_env():
 
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.IMAGE, render_mode="rgb_array")
-    wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode="human")
+    wraper_env = TestActionWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 
@@ -78,19 +78,19 @@ model = None
 if len(sys.argv) > 1:
     if sys.argv[1] == "load":
         path = sys.argv[2]
-        model = PPO.load(path, vec_env)
+        model = PPO.load(path, vec_env, device='cpu')
 else:
     model = PPO("MlpPolicy", vec_env, verbose=0)
-print(type(vec_env.action_space))
 frames = []
 obs = vec_env.reset()
 # Loop de execução com render
 i = 0
 #interessante o render mode human do DummyVecEnv
 for _ in range(3):
+    obs = vec_env.reset()
     while True:
-        frame = vec_env.render(mode="rgb_array")
-        frames.append(frame)
+        #frame = vec_env.render(mode="human")
+        #frames.append(frame)
         action, _ = model.predict(obs, deterministic=False)
         obs, reward, done, info = vec_env.step(action)
         if done:  # `done` é uma lista/vetor no DummyVecEnv
@@ -98,7 +98,7 @@ for _ in range(3):
             break
 vec_env.close()
 
-# Grava como vídeo com qualidade personalizada
-with imageio.get_writer("videos/video.mp4", fps=60, codec="libx264", bitrate="8000k") as writer:
-    for frame in frames:
-        writer.append_data(frame)
+# # Grava como vídeo com qualidade personalizada
+# with imageio.get_writer("videos/video.mp4", fps=60, codec="libx264", bitrate="8000k") as writer:
+#     for frame in frames:
+#         writer.append_data(frame)

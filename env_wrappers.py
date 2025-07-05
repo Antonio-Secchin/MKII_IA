@@ -98,6 +98,7 @@ class InfoActionHistoryWrapper(Wrapper):
             low=-np.inf, high=np.inf,
             shape=(total_dim,), dtype=np.float32
         )
+       
         # Reward/Action/Info spaces seguem do env original
 
     def reset(self, **kwargs):
@@ -151,12 +152,14 @@ class TestActionWrapper(Wrapper):
 
         # Amostra para descobrir dimensão da ação
         sample = self.env.action_space.sample()
-        self.action_size = sample.size if isinstance(sample, np.ndarray) else 1
+        self.action_size = sample.size + 3 if isinstance(sample, np.ndarray) else 1
 
         # Buffer das últimas n_actions
         self.last_actions = np.zeros((self.n_actions, self.action_size), dtype=np.float32)
 
         # Espaço de observação: |vars| + n_actions * action_size
+
+        #Ver esse calculo de total_dim
         obs_dim = len(self.var_names)
         total_dim = obs_dim + self.n_actions * self.action_size
         self.observation_space = gym.spaces.Box(
@@ -164,8 +167,10 @@ class TestActionWrapper(Wrapper):
             shape=(total_dim,), dtype=np.float32
         )
         #TODO: Ver essa seed
-        self.action_space = gym.spaces.MultiBinary(np.array(16))
+        self.action_space = gym.spaces.MultiBinary(self.action_size)
         # Reward/Action/Info spaces seguem do env original
+        self._iskicking = False
+        self._kicktimer = 0
 
     def reset(self, **kwargs):
         # Lida com Gym >=0.26 (obs, info) e Gym <0.26 (obs)
@@ -173,6 +178,8 @@ class TestActionWrapper(Wrapper):
 
         # Zera histórico de ações
         self.last_actions[:] = 0.0
+        self._iskicking = False
+        self._kicktimer = 0
         # Concatena obs de info + histórico de ações
         obs = self._extract(info)
         return np.concatenate([obs, self.last_actions.flatten()]), info
@@ -184,26 +191,34 @@ class TestActionWrapper(Wrapper):
         else:
             action_vec = action
 
-        self.last_actions = np.roll(self.last_actions, 1, 0)
-        self.last_actions[0] = action_vec
+    
         sum_actions = np.sum(action)
 
         total_reward = 0
+        if(action[-3] == 1 and sum_actions ==1):
+            self._iskicking = True
 
         if(action[-1] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
+
             #Executa um golpe especial Voadora
             for act in Voadora:
                 obs, reward, terminated, truncated, info = self.env.step(act)
                 total_reward += reward
+                if terminated or truncated:
+                    break
                 for _ in range(self.steps_between_actions):
                     obs, reward, terminated, truncated, info = self.env.step(NoAction)
                     total_reward += reward
                     if terminated or truncated:
                         break
-                if terminated or truncated:
-                    break
         
-        if(action[-2] == 1 and sum_actions ==1):
+        elif(action[-2] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
             #Executa um golpe especial Fogo Baixo
             for act in FogoBaixo:
                 obs, reward, terminated, truncated, info = self.env.step(act)
@@ -216,18 +231,21 @@ class TestActionWrapper(Wrapper):
                     if terminated or truncated:
                         break
 
-        if(action[-3] == 1 and sum_actions ==1):
-            #Executa um golpe especial Chute Bicicleta, outras acoes podem ser executadas enquanto carrega o chute, entao talvez deixar fixo por um tempo? Eu prefiro deixar fixo
-            for _ in range(231):
-                obs, reward, terminated, truncated, info = self.env.step(act)
-                total_reward += reward
-                if terminated or truncated:
-                    break
         
         else:
             # Executa o step no env original
             #TODO Ver como tratar o caso de ter acao especial com acao normal ex:[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]
+            if np.sum(action[12:]) != 0:
+                action = NoAction
             #Isso pega os 12 primeiros ne?
+            if self._iskicking and action[1] != 1 and np.sum(action[7:11]) == 0 and self._kicktimer < 231:
+                self._kicktimer += 1
+                action[0] = 1
+                action[-3] = 1
+                action_vec[-3] = 1
+            else:
+                self._kicktimer = 0
+                self._iskicking = 0
             action = action[:12]
             obs, reward, terminated, truncated, info = self.env.step(action)
             total_reward += reward
@@ -237,6 +255,9 @@ class TestActionWrapper(Wrapper):
                 total_reward += reward
                 if terminated or truncated:
                     break
+        
+        self.last_actions = np.roll(self.last_actions, 1, 0)
+        self.last_actions[0] = action_vec
         # Concatena obs de info + histórico de ações
         obs = self._extract(info)
         return np.concatenate([obs, self.last_actions.flatten()]), total_reward, terminated, truncated, info
