@@ -1,0 +1,68 @@
+{
+  "info": {
+    "Block_aliado": {
+      "address": 16762372,
+      "type": "|i1"
+    },
+    "Block_inimigo": {
+      "address": 16762660,
+      "type": "|i1"
+    },
+    "Projectile": {
+      "address": 16762940,
+      "type": ">u4"
+    },
+    "Projectile_Position_Enemy": {
+      "address": 16763228,
+      "type": ">u4"
+    },
+    "Projectile_y": {
+      "address": 16762939,
+      "type": "|d1"
+    },
+    "Projectile_y_enemy": {
+      "address": 16763227,
+      "type": "|d1"
+    },
+    "Tempo": {
+      "address": 16755606,
+      "type": "|d1"
+    },
+    "enemy_health": {
+      "address": 16758547,
+      "type": "|u1"
+    },
+    "enemy_rounds_won": {
+      "address": 16772779,
+      "type": "|u1"
+    },
+    "enemy_x_position": {
+      "address": 16758712,
+      "type": ">u2"
+    },
+    "enemy_y_position": {
+      "address": 16758740,
+      "type": ">i2"
+    },
+    "health": {
+      "address": 16758307,
+      "type": "|u1"
+    },
+    "rounds_won": {
+      "address": 16772777,
+      "type": "|u1"
+    },
+    "wins": {
+      "address": 16772772,
+      "type": "|d1"
+    },
+    "x_position": {
+      "address": 16758472,
+      "type": ">u2"
+    },
+    "y_position": {
+      "address": 16758500,
+      "type": ">i2"
+    }
+  }
+}
