@@ -262,6 +262,7 @@ class TestActionWrapper(Wrapper):
         obs = self._extract(info)
         return np.concatenate([obs, self.last_actions.flatten()]), total_reward, terminated, truncated, info
 
+    #Fazer a verificacao do -1 para ver se esta defendendo
     def _extract(self, info):
         # Monta vetor [ info[var] for var in var_names ]
         vals = [ info.get(var, 0.0) for var in self.var_names ]

@@ -9,12 +9,12 @@
       "type": "|i1"
     },
     "Projectile": {
-      "address": 16762940,
-      "type": ">u4"
+      "address": 16762942,
+      "type": ">i2"
     },
     "Projectile_Position_Enemy": {
-      "address": 16763228,
-      "type": ">u4"
+      "address": 16763230,
+      "type": ">i2"
     },
     "Projectile_y": {
       "address": 16762939,

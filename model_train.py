@@ -71,7 +71,8 @@ def make_render_env(var_names):
 if __name__ == "__main__":
 
     #print(multiprocessing.cpu_count())
-
+    
+    #TODO:Adiciona variáveis novas do scenario
     variables = [
         "Tempo",
         "health",
@@ -105,6 +106,7 @@ if __name__ == "__main__":
     # Treinar o modelo
     eval_callback = EvalCallback(eval_env=vec_env, save_dir = "Models", generate_graphic=True, eval_freq=20, n_eval_episodes=10)
 
+    #Mudar para treinar sem parar e ajustar para salvar o ultimo modelo e o melhor modelo nas ultimas n iterações
     model = None
     if len(sys.argv) > 1:
         if sys.argv[1] == "load":
