@@ -265,5 +265,16 @@ class TestActionWrapper(Wrapper):
     #Fazer a verificacao do -1 para ver se esta defendendo
     def _extract(self, info):
         # Monta vetor [ info[var] for var in var_names ]
+        #Verificando se esta defendendo
+        if info["Block_enemy"] == -1:
+            info["Block_enemy"] = 1
+        else:
+            info["Block_enemy"] = 0
+        
+        if info["Block_aliado"] == -1:
+            info["Block_aliado"] = 1
+        else:
+            info["Block_aliado"] = 0
+        
         vals = [ info.get(var, 0.0) for var in self.var_names ]
         return np.array(vals, dtype=np.float32)

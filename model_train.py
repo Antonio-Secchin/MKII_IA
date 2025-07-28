@@ -72,7 +72,6 @@ if __name__ == "__main__":
 
     #print(multiprocessing.cpu_count())
     
-    #TODO:Adiciona variáveis novas do scenario
     variables = [
         "Tempo",
         "health",
@@ -83,7 +82,13 @@ if __name__ == "__main__":
         "x_position",
         "y_position",
         "enemy_x_position",
-        "enemy_y_position"
+        "enemy_y_position",
+        "Block_aliado",
+        "Block_inimigo",
+        "Projectile_x",
+        "Projectile_y",
+        "Projectile_Position_Enemy_x",
+        "Projectile_Position_Enemy_y",
     ]
         
 
@@ -114,5 +119,5 @@ if __name__ == "__main__":
             model = PPO.load(path, vec_env)
     else:
         model = PPO("MlpPolicy", vec_env, verbose=0, device='cpu')
-    model.learn(total_timesteps=200_000, progress_bar=True, callback= eval_callback)
+    model.learn(total_timesteps=20_000_000, progress_bar=True, callback= eval_callback)
     vec_env.close()

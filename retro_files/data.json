@@ -8,11 +8,11 @@
       "address": 16762660,
       "type": "|i1"
     },
-    "Projectile": {
+    "Projectile_x": {
       "address": 16762942,
       "type": ">i2"
     },
-    "Projectile_Position_Enemy": {
+    "Projectile_Position_Enemy_x": {
       "address": 16763230,
       "type": ">i2"
     },
@@ -20,7 +20,7 @@
       "address": 16762939,
       "type": "|d1"
     },
-    "Projectile_y_enemy": {
+    "Projectile_Position_Enemy_y": {
       "address": 16763227,
       "type": "|d1"
     },
