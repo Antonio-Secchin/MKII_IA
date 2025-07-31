@@ -69,7 +69,7 @@ def make_render_env(var_names):
 
 
 if __name__ == "__main__":
-
+   
     #print(multiprocessing.cpu_count())
     
     variables = [
@@ -95,7 +95,9 @@ if __name__ == "__main__":
     #Torna o ambiente vetorizado (requerido por SB3)
     #vec_env = DummyVecEnv([make_env])
     #info_env = MaxAndSkipEnv(make_info_env(variables),12)
-    eval_env = make_eval_env(variables)
+    #eval_env = make_eval_env(variables)
+    eval_env = make_env_image()
+
     vec_env = DummyVecEnv([lambda:eval_env])
 
     # Testando paralelismo
@@ -109,7 +111,7 @@ if __name__ == "__main__":
     #stacked_env = VecFrameStack(vec_env, n_stack=8, channels_order='last')
 
     # Treinar o modelo
-    eval_callback = EvalCallback(eval_env=vec_env, save_dir = "Models", generate_graphic=True, eval_freq=20, n_eval_episodes=10)
+    eval_callback = EvalCallback(eval_env=vec_env, save_dir = "Models", generate_graphic=True, eval_freq=100, n_eval_episodes=20)
 
     #Mudar para treinar sem parar e ajustar para salvar o ultimo modelo e o melhor modelo nas ultimas n iterações
     model = None
@@ -118,6 +120,6 @@ if __name__ == "__main__":
             path = sys.argv[2]
             model = PPO.load(path, vec_env)
     else:
-        model = PPO("MlpPolicy", vec_env, verbose=0, device='cpu')
+        model = PPO("MlpPolicy", vec_env, verbose=0, device='cuda')
     model.learn(total_timesteps=20_000_000, progress_bar=True, callback= eval_callback)
     vec_env.close()

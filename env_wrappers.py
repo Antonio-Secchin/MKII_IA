@@ -176,6 +176,8 @@ class TestActionWrapper(Wrapper):
         # Lida com Gym >=0.26 (obs, info) e Gym <0.26 (obs)
         obs, info = self.env.reset(**kwargs)
 
+        print("Info reset:", info)
+
         # Zera histórico de ações
         self.last_actions[:] = 0.0
         self._iskicking = False
@@ -264,12 +266,13 @@ class TestActionWrapper(Wrapper):
 
     #Fazer a verificacao do -1 para ver se esta defendendo
     def _extract(self, info):
+        print(info)
         # Monta vetor [ info[var] for var in var_names ]
         #Verificando se esta defendendo
-        if info["Block_enemy"] == -1:
-            info["Block_enemy"] = 1
+        if info["Block_inimigo"] == -1:
+            info["Block_inimigo"] = 1
         else:
-            info["Block_enemy"] = 0
+            info["Block_inimigo"] = 0
         
         if info["Block_aliado"] == -1:
             info["Block_aliado"] = 1
