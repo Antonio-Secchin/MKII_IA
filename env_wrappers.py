@@ -138,6 +138,7 @@ class InfoActionHistoryWrapper(Wrapper):
 
     def _extract(self, info):
         # Monta vetor [ info[var] for var in var_names ]
+        #print(info)
         vals = [ info.get(var, 0.0) for var in self.var_names ]
         return np.array(vals, dtype=np.float32)
     
@@ -152,6 +153,7 @@ class TestActionWrapper(Wrapper):
 
         # Amostra para descobrir dimensão da ação
         sample = self.env.action_space.sample()
+        self.original_action_size = sample.size
         self.action_size = sample.size + 3 if isinstance(sample, np.ndarray) else 1
 
         # Buffer das últimas n_actions
@@ -166,7 +168,7 @@ class TestActionWrapper(Wrapper):
             low=-np.inf, high=np.inf,
             shape=(total_dim,), dtype=np.float32
         )
-        #TODO: Ver essa seed
+        #print(self.env.action_space.shape)
         self.action_space = gym.spaces.MultiBinary(self.action_size)
         # Reward/Action/Info spaces seguem do env original
         self._iskicking = False
@@ -176,7 +178,7 @@ class TestActionWrapper(Wrapper):
         # Lida com Gym >=0.26 (obs, info) e Gym <0.26 (obs)
         obs, info = self.env.reset(**kwargs)
 
-        print("Info reset:", info)
+        #print("Info reset:", info)
 
         # Zera histórico de ações
         self.last_actions[:] = 0.0
@@ -206,6 +208,7 @@ class TestActionWrapper(Wrapper):
                 self._kicktimer = 0
 
             #Executa um golpe especial Voadora
+            # A acao aqui tem tamanho 12
             for act in Voadora:
                 obs, reward, terminated, truncated, info = self.env.step(act)
                 total_reward += reward
@@ -222,6 +225,7 @@ class TestActionWrapper(Wrapper):
                 self._iskicking = False
                 self._kicktimer = 0
             #Executa um golpe especial Fogo Baixo
+            # A acao aqui tem tamanho 12
             for act in FogoBaixo:
                 obs, reward, terminated, truncated, info = self.env.step(act)
                 total_reward += reward
@@ -248,8 +252,7 @@ class TestActionWrapper(Wrapper):
             else:
                 self._kicktimer = 0
                 self._iskicking = 0
-            action = action[:12]
-            obs, reward, terminated, truncated, info = self.env.step(action)
+            obs, reward, terminated, truncated, info = self.env.step(action[:12])
             total_reward += reward
 
             for _ in range(self.steps_between_actions):
@@ -266,18 +269,18 @@ class TestActionWrapper(Wrapper):
 
     #Fazer a verificacao do -1 para ver se esta defendendo
     def _extract(self, info):
-        print(info)
         # Monta vetor [ info[var] for var in var_names ]
         #Verificando se esta defendendo
-        if info["Block_inimigo"] == -1:
-            info["Block_inimigo"] = 1
-        else:
-            info["Block_inimigo"] = 0
-        
-        if info["Block_aliado"] == -1:
-            info["Block_aliado"] = 1
-        else:
-            info["Block_aliado"] = 0
+        if len(info) > 0:
+            if info["Block_inimigo"] == -1:
+                info["Block_inimigo"] = 1
+            else:
+                info["Block_inimigo"] = 0
+            
+            if info["Block_aliado"] == -1:
+                info["Block_aliado"] = 1
+            else:
+                info["Block_aliado"] = 0
         
         vals = [ info.get(var, 0.0) for var in self.var_names ]
         return np.array(vals, dtype=np.float32)
