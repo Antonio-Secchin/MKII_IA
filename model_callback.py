@@ -177,7 +177,7 @@ class SimpleEvalCallback(BaseCallback):
         #     f.write("rollout,reward\n")
         #     for i, r in enumerate(self._rollout_rewards_value):
         #         f.write(f"{(i+1) * self._eval_freq},{int(r)}\n")
-        if self._generate_graphic and not self._means_rewards:
+        if self._generate_graphic or not self._means_rewards:
             print("Nenhuma avaliação registrada. Gráfico não será gerado.")
             return
 
