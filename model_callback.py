@@ -16,7 +16,7 @@ class EvalCallback(BaseCallback):
     :param eval_freq: (int) Evaluate the agent every eval_freq call of the callback.
     """
 
-    def __init__(self, eval_env, save_dir,n_eval_episodes=3, eval_freq=10, generate_graphic = False):
+    def __init__(self, eval_env, save_dir,n_eval_episodes=3, eval_freq=10, generate_graphic = False,  env_info = None):
         super().__init__()
         self._eval_env = eval_env
         self._n_eval_episodes = n_eval_episodes
@@ -30,6 +30,7 @@ class EvalCallback(BaseCallback):
         self._rollout_rewards_value = []
         self._means_rewards = []
         self._generate_graphic = generate_graphic
+        self.infos(save_dir, env_info)
 
     def _on_step(self) -> bool:
         self._rollout_reward += self.locals["rewards"]
@@ -105,6 +106,28 @@ class EvalCallback(BaseCallback):
 
         print(f"Gráfico de desempenho salvo em: {self._graph_path}")
 
+    def callback_info(self):
+        return {
+            "n_eval_episodes": self._n_eval_episodes,
+            "eval_freq": self._eval_freq
+        }
+
+    def infos(self, save_dir, env_info=None):
+        # Monta o caminho do arquivo
+        filepath = os.path.join(save_dir, "informacao_do_treino.txt")
+
+        # Obtém as infos do próprio callback
+        info_dict = self.callback_info()
+
+        # Se o usuário quiser incluir info do ambiente
+        if env_info is not None:
+            info_dict["env_info"] = env_info
+
+        # Escreve no arquivo TXT
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("=== INFORMAÇÕES DO TREINO ===\n\n")
+            for key, value in info_dict.items():
+                f.write(f"{key}: {value}\n")
     
 class SimpleEvalCallback(BaseCallback):
     """
@@ -115,7 +138,7 @@ class SimpleEvalCallback(BaseCallback):
     :param eval_freq: (int) Evaluate the agent every eval_freq call of the callback.
     """
 
-    def __init__(self, eval_env, save_dir,n_eval_episodes=5, eval_freq=100, generate_graphic = False):
+    def __init__(self, eval_env, save_dir,n_eval_episodes=5, eval_freq=100, generate_graphic = False, env_info = None):
         super().__init__()
         self._eval_env = eval_env
         self._n_eval_episodes = n_eval_episodes
@@ -129,6 +152,7 @@ class SimpleEvalCallback(BaseCallback):
         self._rollout_rewards_value = []
         self._means_rewards = []
         self._generate_graphic = generate_graphic
+        self.infos(save_dir, env_info)
 
     def _on_step(self) -> bool:
         self._rollout_reward += self.locals["rewards"]
@@ -204,3 +228,26 @@ class SimpleEvalCallback(BaseCallback):
         plt.close()
 
         print(f"Gráfico de desempenho salvo em: {self._graph_path}")
+
+    def callback_info(self):
+        return {
+            "n_eval_episodes": self._n_eval_episodes,
+            "eval_freq": self._eval_freq
+        }
+    
+    def infos(self, save_dir, env_info=None):
+        # Monta o caminho do arquivo
+        filepath = os.path.join(save_dir, "informacao_do_treino.txt")
+
+        # Obtém as infos do próprio callback
+        info_dict = self.callback_info()
+
+        # Se o usuário quiser incluir info do ambiente
+        if env_info is not None:
+            info_dict["env_info"] = env_info
+
+        # Escreve no arquivo TXT
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("=== INFORMAÇÕES DO TREINO ===\n\n")
+            for key, value in info_dict.items():
+                f.write(f"{key}: {value}\n")

@@ -73,6 +73,12 @@ class LastActionsWrapper(gym.Wrapper):
 
         return obs, reward, terminated, truncated, info
     
+    def env_info(self):
+        return {
+            "Obs_type": "RAM + Actions",
+            "Act_type": "Actions",
+            "n_actions": self.n_actions
+        }
 
 
 
@@ -141,6 +147,15 @@ class InfoActionHistoryWrapper(Wrapper):
         #print(info)
         vals = [ info.get(var, 0.0) for var in self.var_names ]
         return np.array(vals, dtype=np.float32)
+    
+    def env_info(self):
+        return {
+            "Obs_type": "RAM Reduzida + Actions",
+            "Act_type": "Actions",
+            "n_actions": self.n_actions,
+            "steps_between_actions": self.steps_between_actions
+        }
+
     
 
 #Wrapper para testar as actions compostas
@@ -284,3 +299,11 @@ class TestActionWrapper(Wrapper):
         
         vals = [ info.get(var, 0.0) for var in self.var_names ]
         return np.array(vals, dtype=np.float32)
+    
+    def env_info(self):
+        return {
+            "Obs_type": "RAM Reduzida + Actions",
+            "Act_type": "Actions with Specials",
+            "n_actions": self.n_actions,
+            "steps_between_actions": self.steps_between_actions
+        }
