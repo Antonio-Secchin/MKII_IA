@@ -112,7 +112,7 @@ if __name__ == "__main__":
     #stacked_env = VecFrameStack(vec_env, n_stack=4, channels_order='last')
 
     # Treinar o modelo
-    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/Ram_env_Scorpion", generate_graphic=True, eval_freq=100, n_eval_episodes=20)
+    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/Ram_env_Scorpion", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=eval_env.env_info())
     #eval_callback = SimpleEvalCallback(eval_env=stacked_env, save_dir = "Models/Image_env_stacked", generate_graphic=True, eval_freq=100, n_eval_episodes=20)
 
     #Mudar para treinar sem parar e ajustar para salvar o ultimo modelo e o melhor modelo nas ultimas n iterações
