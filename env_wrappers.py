@@ -14,6 +14,10 @@ FogoBaixo = [[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0, 0
 
 Voadora = [[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
 
+FogoBaixo_Left = [[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+Voadora_Left = [[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
+
 #5 segundos
 Chute_Bicicleta = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
@@ -169,7 +173,7 @@ class TestActionWrapper(Wrapper):
         # Amostra para descobrir dimensão da ação
         sample = self.env.action_space.sample()
         self.original_action_size = sample.size
-        self.action_size = sample.size + 3 if isinstance(sample, np.ndarray) else 1
+        self.action_size = sample.size + 5 if isinstance(sample, np.ndarray) else 1
 
         # Buffer das últimas n_actions
         self.last_actions = np.zeros((self.n_actions, self.action_size), dtype=np.float32)
@@ -214,7 +218,7 @@ class TestActionWrapper(Wrapper):
         sum_actions = np.sum(action)
 
         total_reward = 0
-        if(action[-3] == 1 and sum_actions ==1):
+        if(action[-5] == 1 and sum_actions ==1):
             self._iskicking = True
 
         if(action[-1] == 1 and sum_actions ==1):
@@ -234,14 +238,49 @@ class TestActionWrapper(Wrapper):
                     total_reward += reward
                     if terminated or truncated:
                         break
+
+        if(action[-2] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
+
+            #Executa um golpe especial Voadora
+            # A acao aqui tem tamanho 12
+            for act in Voadora_Left:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
         
-        elif(action[-2] == 1 and sum_actions ==1):
+        elif(action[-3] == 1 and sum_actions ==1):
             if self._iskicking:
                 self._iskicking = False
                 self._kicktimer = 0
             #Executa um golpe especial Fogo Baixo
             # A acao aqui tem tamanho 12
             for act in FogoBaixo:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
+        
+        elif(action[-4] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
+            #Executa um golpe especial Fogo Baixo
+            # A acao aqui tem tamanho 12
+            for act in FogoBaixo_Left:
                 obs, reward, terminated, truncated, info = self.env.step(act)
                 total_reward += reward
                 if terminated or truncated:
@@ -258,18 +297,17 @@ class TestActionWrapper(Wrapper):
             #TODO Ver como tratar o caso de ter acao especial com acao normal ex:[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]
             if np.sum(action[12:]) != 0:
                 action = NoAction
-            #Isso pega os 12 primeiros ne?
             if self._iskicking and action[1] != 1 and np.sum(action[7:11]) == 0 and self._kicktimer < 231:
                 self._kicktimer += 1
                 action[0] = 1
-                action[-3] = 1
-                action_vec[-3] = 1
+                action[-5] = 1
+                action_vec[-5] = 1
             else:
                 self._kicktimer = 0
                 self._iskicking = 0
             obs, reward, terminated, truncated, info = self.env.step(action[:12])
             total_reward += reward
-
+            #Aqui eu tenho que talvez mudar caso estja chutando para nao executar o NoAction
             for _ in range(self.steps_between_actions):
                 obs, reward, terminated, truncated, info = self.env.step(NoAction)
                 total_reward += reward

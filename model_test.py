@@ -5,6 +5,7 @@ from retro import Observations
 from stable_baselines3 import PPO,A2C, DQN
 
 from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, SubprocVecEnv, VecVideoRecorder
+from stable_baselines3.common.save_util import load_from_zip_file
 
 
 from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper,TestActionWrapper
@@ -41,7 +42,7 @@ def make_eval_env():
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env(var_names):
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode="human")
-    wraper_env = TestActionWrapper(env, var_names=var_names, n_actions=10)
+    wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 
@@ -79,6 +80,7 @@ if len(sys.argv) > 1:
     if sys.argv[1] == "load":
         path = sys.argv[2]
         model = PPO.load(path, vec_env, device='cpu')
+        print(load_from_zip_file(path))
 else:
     model = PPO("MlpPolicy", vec_env, verbose=0)
 frames = []
