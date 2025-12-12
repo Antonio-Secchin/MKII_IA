@@ -113,6 +113,7 @@ class EvalCallback(BaseCallback):
         }
 
     def infos(self, save_dir, env_info=None):
+        os.makedirs(save_dir, exist_ok=True)
         # Monta o caminho do arquivo
         filepath = os.path.join(save_dir, "informacao_do_treino.txt")
 
@@ -152,6 +153,7 @@ class SimpleEvalCallback(BaseCallback):
         self._rollout_rewards_value = []
         self._means_rewards = []
         self._generate_graphic = generate_graphic
+        print(self._generate_graphic)
         self.infos(save_dir, env_info)
 
     def _on_step(self) -> bool:
@@ -196,12 +198,12 @@ class SimpleEvalCallback(BaseCallback):
         print(f"✅ Modelo salvo em {filename}")
 
     def _on_training_end(self) -> None:
-        # filename = os.path.join(self._save_path_models_rollout, "RewardsTrain.csv")
-        # with open(filename, "w") as f:
-        #     f.write("rollout,reward\n")
-        #     for i, r in enumerate(self._rollout_rewards_value):
-        #         f.write(f"{(i+1) * self._eval_freq},{int(r)}\n")
-        if self._generate_graphic or not self._means_rewards:
+        filename = os.path.join(self._save_path_models_rollout, "RewardsTrain.csv")
+        with open(filename, "w") as f:
+            f.write("rollout,reward\n")
+            for i, r in enumerate(self._rollout_rewards_value):
+                f.write(f"{(i+1) * self._eval_freq},{int(r)}\n")
+        if self._generate_graphic and not self._means_rewards:
             print("Nenhuma avaliação registrada. Gráfico não será gerado.")
             return
 
@@ -236,6 +238,7 @@ class SimpleEvalCallback(BaseCallback):
         }
     
     def infos(self, save_dir, env_info=None):
+        os.makedirs(save_dir, exist_ok=True)
         # Monta o caminho do arquivo
         filepath = os.path.join(save_dir, "informacao_do_treino.txt")
 
