@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
 import numpy as np
 import os
+from datetime import datetime
+from pprint import pformat
 
 from stable_baselines3.common.callbacks import BaseCallback
 
@@ -148,13 +150,14 @@ class SimpleEvalCallback(BaseCallback):
         self._save_path = os.path.join(save_dir, "newest_model")
         self._graph_path = os.path.join(save_dir, "reward_plot.png")
         self._save_path_models_rollout = os.path.join(save_dir, "RolloutModels/")
+        self._save_dir = save_dir
         self._rollouts_done = 0
         self._rollout_reward = 0
         self._rollout_rewards_value = []
         self._means_rewards = []
         self._generate_graphic = generate_graphic
-        print(self._generate_graphic)
-        self.infos(save_dir, env_info)
+        #print(self._generate_graphic)
+        self.infos(env_info)
 
     def _on_step(self) -> bool:
         self._rollout_reward += self.locals["rewards"]
@@ -203,6 +206,13 @@ class SimpleEvalCallback(BaseCallback):
             f.write("rollout,reward\n")
             for i, r in enumerate(self._rollout_rewards_value):
                 f.write(f"{(i+1) * self._eval_freq},{int(r)}\n")
+        
+        filename_graf = os.path.join(self._save_path_models_rollout, "RewardsGraf.csv")
+        with open(filename_graf, "w") as f:
+            f.write("rollout,reward\n")
+            for i, r in enumerate(self._means_rewards):
+                f.write(f"{(i+1) * self._eval_freq},{(r)}\n")
+
         if self._generate_graphic and not self._means_rewards:
             print("Nenhuma avaliação registrada. Gráfico não será gerado.")
             return
@@ -231,16 +241,22 @@ class SimpleEvalCallback(BaseCallback):
 
         print(f"Gráfico de desempenho salvo em: {self._graph_path}")
 
+        self.salvar_informacoes_do_modelo(
+            model=self.model,
+            save_path=self._save_dir
+        )
+
+
     def callback_info(self):
         return {
             "n_eval_episodes": self._n_eval_episodes,
             "eval_freq": self._eval_freq
         }
     
-    def infos(self, save_dir, env_info=None):
-        os.makedirs(save_dir, exist_ok=True)
+    def infos(self, env_info=None):
+        os.makedirs(self._save_dir, exist_ok=True)
         # Monta o caminho do arquivo
-        filepath = os.path.join(save_dir, "informacao_do_treino.txt")
+        filepath = os.path.join(self._save_dir, "informacao_do_treino.txt")
 
         # Obtém as infos do próprio callback
         info_dict = self.callback_info()
@@ -254,3 +270,85 @@ class SimpleEvalCallback(BaseCallback):
             f.write("=== INFORMAÇÕES DO TREINO ===\n\n")
             for key, value in info_dict.items():
                 f.write(f"{key}: {value}\n")
+
+
+    def salvar_informacoes_do_modelo(self, model, save_path):
+        filename = os.path.join(save_path, "informação_do_modelo.txt")
+
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write("=" * 70 + "\n")
+            f.write("INFORMAÇÕES DO MODELO - STABLE BASELINES 3\n")
+            f.write("=" * 70 + "\n\n")
+
+            # Data
+            f.write(f"Data de geração: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n\n")
+
+            # --------------------------------------------------
+            # Algoritmo
+            # --------------------------------------------------
+            f.write("▶ ALGORITMO\n")
+            f.write("-" * 70 + "\n")
+            f.write(f"Classe do modelo: {model.__class__.__name__}\n\n")
+
+            # --------------------------------------------------
+            # Timesteps
+            # --------------------------------------------------
+            f.write("▶ TREINAMENTO\n")
+            f.write("-" * 70 + "\n")
+            f.write(f"Timesteps treinados: {model.num_timesteps}\n")
+            f.write(f"Número de updates: {getattr(model, '_n_updates', 'N/A')}\n\n")
+
+            # --------------------------------------------------
+            # Hiperparâmetros principais
+            # --------------------------------------------------
+            f.write("▶ HIPERPARÂMETROS PRINCIPAIS\n")
+            f.write("-" * 70 + "\n")
+
+            hiperparams = {
+                "gamma": model.gamma,
+                "learning_rate": model.learning_rate,
+                "batch_size": getattr(model, "batch_size", "N/A"),
+                "n_steps": getattr(model, "n_steps", "N/A"),
+                "train_freq": getattr(model, "train_freq", "N/A"),
+                "buffer_size": getattr(model, "buffer_size", "N/A"),
+            }
+
+            for k, v in hiperparams.items():
+                f.write(f"{k:20}: {v}\n")
+
+            f.write("\n")
+
+            # --------------------------------------------------
+            # Exploração (DQN)
+            # --------------------------------------------------
+            if hasattr(model, "exploration_rate"):
+                f.write("▶ EXPLORAÇÃO (DQN)\n")
+                f.write("-" * 70 + "\n")
+                f.write(f"Epsilon inicial : {model.exploration_initial_eps}\n")
+                f.write(f"Epsilon final   : {model.exploration_final_eps}\n")
+                f.write(f"Epsilon atual   : {model.exploration_rate}\n")
+                f.write(f"Exploration frac: {model.exploration_fraction}\n\n")
+
+            # --------------------------------------------------
+            # Arquitetura da rede neural
+            # --------------------------------------------------
+            f.write("▶ ARQUITETURA DA REDE NEURAL\n")
+            f.write("-" * 70 + "\n")
+            f.write(str(model.policy) + "\n\n")
+
+            # --------------------------------------------------
+            # Policy kwargs
+            # --------------------------------------------------
+            f.write("▶ CONFIGURAÇÕES DA POLICY (policy_kwargs)\n")
+            f.write("-" * 70 + "\n")
+            if model.policy_kwargs:
+                f.write(pformat(model.policy_kwargs, indent=4))
+            else:
+                f.write("Nenhuma policy_kwargs definida.")
+            f.write("\n\n")
+
+            f.write("=" * 70 + "\n")
+            f.write("FIM DO ARQUIVO\n")
+            f.write("=" * 70 + "\n")
+
+        print(f"Informações do modelo salvas em: {filename}")

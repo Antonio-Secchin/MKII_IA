@@ -1,4 +1,5 @@
 import sys
+import os
 import retro
 from retro import Observations
 
@@ -8,7 +9,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, Subproc
 from stable_baselines3.common.save_util import load_from_zip_file
 
 
-from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper,TestActionWrapper
+from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper,TestActionWrapper, TestActionWrapper_Old
 
 import imageio
 
@@ -22,17 +23,24 @@ import imageio
 #Usar players=<n> para colocar mais de um jogador/agente
 # rew will be a list of [player_1_rew, player_2_rew]
 def make_env():
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
-    wraper_env = LastActionsWrapper(env, n_actions=10)
-    return wraper_env
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = "rgb_array")
+    #wraper_env = LastActionsWrapper(env, n_actions=10)
+    return env
 
 def make_env_image():
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.IMAGE, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.IMAGE, render_mode = "rgb_array")
     return env
 
 def make_info_env(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = "rgb_array")
     wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
+    return wraper_env
+
+def make_test_env(var_names):
+    # LiuKangVsScorpion_VeryHard_11
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = "rgb_array")
+    wraper_env = TestActionWrapper(env, var_names=var_names, n_actions=10, steps_between_actions=11)
+    #wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 def make_eval_env():
@@ -41,8 +49,8 @@ def make_eval_env():
 
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode="human")
-    wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
+    env = retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.RAM, render_mode="rgb_array")
+    wraper_env = TestActionWrapper_Old(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 
@@ -56,8 +64,15 @@ variables = [
     "x_position",
     "y_position",
     "enemy_x_position",
-    "enemy_y_position"
+    "enemy_y_position",
+    "Block_aliado",
+    "Block_inimigo",
+    "Projectile_x",
+    "Projectile_y",
+    "Projectile_Position_Enemy_x",
+    "Projectile_Position_Enemy_y",
 ]
+
     
 
 #Torna o ambiente vetorizado (requerido por SB3)
@@ -80,7 +95,7 @@ if len(sys.argv) > 1:
     if sys.argv[1] == "load":
         path = sys.argv[2]
         model = PPO.load(path, vec_env, device='cpu')
-        print(load_from_zip_file(path))
+        #print(load_from_zip_file(path))
 else:
     model = PPO("MlpPolicy", vec_env, verbose=0)
 frames = []
@@ -91,8 +106,8 @@ i = 0
 for _ in range(3):
     obs = vec_env.reset()
     while True:
-        #frame = vec_env.render(mode="human")
-        #frames.append(frame)
+        frame = vec_env.render(mode="rgb_array")
+        frames.append(frame)
         action, _ = model.predict(obs, deterministic=False)
         obs, reward, done, info = vec_env.step(action)
         if done:  # `done` é uma lista/vetor no DummyVecEnv
@@ -100,7 +115,12 @@ for _ in range(3):
             break
 vec_env.close()
 
+video_name = path.split("Models/", 1)[1].replace("/", "_")
+video_name = video_name.replace(".zip", ".mp4")
+video_path = os.path.join("videos", video_name)
+os.makedirs("videos", exist_ok=True)
+
 # # Grava como vídeo com qualidade personalizada
-# with imageio.get_writer("videos/video.mp4", fps=60, codec="libx264", bitrate="8000k") as writer:
-#     for frame in frames:
-#         writer.append_data(frame)
+with imageio.get_writer(video_path, fps=30, codec="libx264", bitrate="8000k") as writer:
+    for frame in frames:
+        writer.append_data(frame)

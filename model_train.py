@@ -25,6 +25,7 @@ import multiprocessing
 ###
 # env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P')
 # env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', render_mode = None)
+# retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.IMAGE, render_mode = None)
 ###
 
 #Usar players=<n> para colocar mais de um jogador/agente
@@ -43,12 +44,12 @@ def make_info_env_fn(var_names, seed=0):
     return _init
 
 def make_env(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.RAM, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
     #wraper_env = InfoActionHistoryWrapper(env, n_actions=10)
     return env
 
 def make_env_image(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.IMAGE, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.IMAGE, render_mode = None)
     return env
 
 def make_info_env(var_names):
@@ -59,7 +60,6 @@ def make_info_env(var_names):
 def make_test_env(var_names):
     env = retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.RAM, render_mode = None)
     wraper_env = TestActionWrapper(env, var_names=var_names, n_actions=10, steps_between_actions=11)
-    #wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 # Ambiente para EXECUÇÃO com renderização
@@ -95,10 +95,10 @@ if __name__ == "__main__":
 
     #Torna o ambiente vetorizado (requerido por SB3)
     #vec_env = DummyVecEnv([make_env])
-    eval_env = make_env(variables)
-    #eval_env = make_test_env(variables)
+    eval_env = make_test_env(variables)
+    #eval_env = make_env(variables)
     #eval_env = make_info_env(variables)
-    #eval_env = make_env_image()
+    #eval_env = make_env_image(variables)
 
     vec_env = DummyVecEnv([lambda:eval_env])
 
@@ -110,10 +110,10 @@ if __name__ == "__main__":
 
     # Adiciona VecFrameStack (ex: 4 frames empilhados)
     #stacked_env = VecFrameStack(vec_env, n_stack=4, channels_order='last')
-
+    #env_info = "RAM_env \n Action_space: actions"
     # Treinar o modelo
-    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/Ram_env_Scorpion", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=eval_env.env_info())
-    #eval_callback = SimpleEvalCallback(eval_env=stacked_env, save_dir = "Models/Image_env_stacked", generate_graphic=True, eval_freq=100, n_eval_episodes=20)
+    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/RAM_Red_Jax_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=eval_env.env_info())
+    #eval_callback = SimpleEvalCallback(eval_env=stacked_env, save_dir = "Models/Image_env_stacked_Scorpion_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=env_info)
 
     #Mudar para treinar sem parar e ajustar para salvar o ultimo modelo e o melhor modelo nas ultimas n iterações
     model = None
@@ -125,5 +125,5 @@ if __name__ == "__main__":
         #model para imagem
         #model = PPO("CnnPolicy", stacked_env, verbose=0, device='cuda')
         model = PPO("MlpPolicy", vec_env, verbose=0, device='cpu')
-    model.learn(total_timesteps=20_000_000, progress_bar=True, callback= eval_callback)
+    model.learn(total_timesteps=15_000_000, progress_bar=True, callback= eval_callback)
     vec_env.close()
