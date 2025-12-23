@@ -49,29 +49,30 @@ def make_eval_env():
 
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.RAM, render_mode="rgb_array")
-    wraper_env = TestActionWrapper_Old(env, var_names=var_names, n_actions=10)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode= "rgb_array")
+    wraper_env = TestActionWrapper(env, var_names=var_names, n_actions=10, steps_between_actions=11)
+    #wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
 
 variables = [
-    "Tempo",
-    "health",
-    "enemy_health",
-    "rounds_won",
-    "enemy_rounds_won",
-    "wins",
-    "x_position",
-    "y_position",
-    "enemy_x_position",
-    "enemy_y_position",
-    "Block_aliado",
-    "Block_inimigo",
-    "Projectile_x",
-    "Projectile_y",
-    "Projectile_Position_Enemy_x",
-    "Projectile_Position_Enemy_y",
-]
+        "Tempo",
+        "health",
+        "enemy_health",
+        "rounds_won",
+        "enemy_rounds_won",
+        "wins",
+        "x_position",
+        "y_position",
+        "enemy_x_position",
+        "enemy_y_position",
+        "Block_aliado",
+        "Block_inimigo",
+        "Projectile_x",
+        "Projectile_y",
+        "Projectile_Position_Enemy_x",
+        "Projectile_Position_Enemy_y",
+    ]
 
     
 
@@ -121,6 +122,6 @@ video_path = os.path.join("videos", video_name)
 os.makedirs("videos", exist_ok=True)
 
 # # Grava como vídeo com qualidade personalizada
-with imageio.get_writer(video_path, fps=30, codec="libx264", bitrate="8000k") as writer:
+with imageio.get_writer(video_path, fps=15, codec="libx264", bitrate="8000k") as writer:
     for frame in frames:
         writer.append_data(frame)

@@ -251,7 +251,7 @@ class TestActionWrapper(Wrapper):
                     if terminated or truncated:
                         break
 
-        if(action[-2] == 1 and sum_actions ==1):
+        elif(action[-2] == 1 and sum_actions ==1):
             if self._iskicking:
                 self._iskicking = False
                 self._kicktimer = 0
@@ -306,7 +306,6 @@ class TestActionWrapper(Wrapper):
         
         else:
             # Executa o step no env original
-            #TODO Ver como tratar o caso de ter acao especial com acao normal ex:[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]
             if np.sum(action[12:]) != 0:
                 action = NoAction
             if self._iskicking and action[1] != 1 and np.sum(action[7:11]) == 0 and self._kicktimer < 231:

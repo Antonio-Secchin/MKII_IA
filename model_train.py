@@ -49,11 +49,11 @@ def make_env(var_names):
     return env
 
 def make_env_image(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.IMAGE, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.IMAGE, render_mode = None)
     return env
 
 def make_info_env(var_names):
-    env = retro.make(game='MortalKombatII-Genesis', state='LiuKangVsScorpion_VeryHard_11', obs_type=Observations.RAM, render_mode = None)
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax', obs_type=Observations.RAM, render_mode = None)
     wraper_env = InfoActionHistoryWrapper(env, var_names=var_names, n_actions=10)
     return wraper_env
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     #stacked_env = VecFrameStack(vec_env, n_stack=4, channels_order='last')
     #env_info = "RAM_env \n Action_space: actions"
     # Treinar o modelo
-    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/RAM_Red_Jax_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=eval_env.env_info())
+    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/RAM_Red_Scorpion_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=eval_env.env_info())
     #eval_callback = SimpleEvalCallback(eval_env=stacked_env, save_dir = "Models/Image_env_stacked_Scorpion_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=env_info)
 
     #Mudar para treinar sem parar e ajustar para salvar o ultimo modelo e o melhor modelo nas ultimas n iterações
