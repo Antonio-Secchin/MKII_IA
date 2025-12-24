@@ -16,7 +16,7 @@ from stable_baselines3.common.atari_wrappers import MaxAndSkipEnv
 
 from model_callback import EvalCallback, SimpleEvalCallback
 
-from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper, TestActionWrapper
+from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper, TestActionWrapper, RamActionWrapper
 
 import multiprocessing
 
@@ -62,6 +62,11 @@ def make_test_env(var_names):
     wraper_env = TestActionWrapper(env, var_names=var_names, n_actions=10, steps_between_actions=11)
     return wraper_env
 
+def make_test_ram_env(var_names):
+    env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode = None)
+    wraper_env = RamActionWrapper(env, n_actions=10, steps_between_actions=11)
+    return wraper_env
+
 # Ambiente para EXECUÇÃO com renderização
 def make_render_env(var_names):
     env = retro.make(game='MortalKombatII-Genesis', state='Level1.LiuKangVsJax.2P', obs_type=Observations.RAM, render_mode="human")
@@ -96,6 +101,7 @@ if __name__ == "__main__":
     #Torna o ambiente vetorizado (requerido por SB3)
     #vec_env = DummyVecEnv([make_env])
     eval_env = make_test_env(variables)
+    #eval_env = make_test_ram_env(variables)
     #eval_env = make_env(variables)
     #eval_env = make_info_env(variables)
     #eval_env = make_env_image(variables)
@@ -112,7 +118,7 @@ if __name__ == "__main__":
     #stacked_env = VecFrameStack(vec_env, n_stack=4, channels_order='last')
     #env_info = "RAM_env \n Action_space: actions"
     # Treinar o modelo
-    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/RAM_Red_Scorpion_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=eval_env.env_info())
+    eval_callback = SimpleEvalCallback(eval_env=vec_env, save_dir = "Models/RAM_Test_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=eval_env.env_info())
     #eval_callback = SimpleEvalCallback(eval_env=stacked_env, save_dir = "Models/Image_env_stacked_Scorpion_att", generate_graphic=True, eval_freq=100, n_eval_episodes=20, env_info=env_info)
 
     #Mudar para treinar sem parar e ajustar para salvar o ultimo modelo e o melhor modelo nas ultimas n iterações

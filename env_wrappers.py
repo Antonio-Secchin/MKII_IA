@@ -504,3 +504,179 @@ class TestActionWrapper_Old(Wrapper):
         
         vals = [ info.get(var, 0.0) for var in self.var_names ]
         return np.array(vals, dtype=np.float32)
+
+
+
+#Wrapper para Ram e as actions compostas
+class RamActionWrapper(Wrapper):
+    def __init__(self, env, n_actions, steps_between_actions = 11):
+        super().__init__(env)
+        self.n_actions = n_actions
+        self.steps_between_actions = steps_between_actions
+
+        # Amostra para descobrir dimensão da ação
+        sample = self.env.action_space.sample()
+        self.original_action_size = sample.size
+        self.action_size = sample.size + 5 if isinstance(sample, np.ndarray) else 1
+
+        # Buffer das últimas n_actions
+        self.last_actions = np.zeros((self.n_actions, self.action_size), dtype=np.float32)
+
+        # Espaço de observação: |vars| + n_actions * action_size
+        
+        orig_obs_space = self.env.observation_space
+        obs_size = orig_obs_space.shape[0] if isinstance(orig_obs_space, gym.spaces.Box) else len(orig_obs_space)
+        new_obs_dim = obs_size + self.n_actions * self.action_size
+        
+        self.observation_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, shape=(new_obs_dim,), dtype=np.float32
+        )  
+
+
+        #Ver esse calculo de total_dim
+        # obs_dim = len(self.var_names)
+        # total_dim = obs_dim + self.n_actions * self.action_size
+        # self.observation_space = gym.spaces.Box(
+        #     low=-np.inf, high=np.inf,
+        #     shape=(total_dim,), dtype=np.float32
+        # )
+        #print(self.env.action_space.shape)
+        self.action_space = gym.spaces.MultiBinary(self.action_size)
+        # Reward/Action/Info spaces seguem do env original
+        self._iskicking = False
+        self._kicktimer = 0
+
+    def reset(self, **kwargs):
+        # Lida com Gym >=0.26 (obs, info) e Gym <0.26 (obs)
+        obs, info = self.env.reset(**kwargs)
+
+        #print("Info reset:", info)
+
+        # Zera histórico de ações
+        self.last_actions[:] = 0.0
+        self._iskicking = False
+        self._kicktimer = 0
+        # Concatena obs de info + histórico de ações
+        return np.concatenate([obs, self.last_actions.flatten()]), info
+
+    def step(self, action):
+        # Atualiza buffer de ações
+        if isinstance(action, (int, np.integer)):
+            action_vec = np.array([action], dtype=np.float32)
+        else:
+            action_vec = action
+
+    
+        sum_actions = np.sum(action)
+
+        total_reward = 0
+        if(action[-5] == 1 and sum_actions ==1):
+            self._iskicking = True
+
+        if(action[-1] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
+
+            #Executa um golpe especial Voadora
+            # A acao aqui tem tamanho 12
+            for act in Voadora:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
+
+        elif(action[-2] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
+
+            #Executa um golpe especial Voadora
+            # A acao aqui tem tamanho 12
+            for act in Voadora_Left:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
+        
+        elif(action[-3] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
+            #Executa um golpe especial Fogo Baixo
+            # A acao aqui tem tamanho 12
+            for act in FogoBaixo:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
+        
+        elif(action[-4] == 1 and sum_actions ==1):
+            if self._iskicking:
+                self._iskicking = False
+                self._kicktimer = 0
+            #Executa um golpe especial Fogo Baixo
+            # A acao aqui tem tamanho 12
+            for act in FogoBaixo_Left:
+                obs, reward, terminated, truncated, info = self.env.step(act)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+                for _ in range(self.steps_between_actions):
+                    obs, reward, terminated, truncated, info = self.env.step(NoAction)
+                    total_reward += reward
+                    if terminated or truncated:
+                        break
+
+        
+        else:
+            # Executa o step no env original
+            if np.sum(action[12:]) != 0:
+                action = NoAction
+            if self._iskicking and action[1] != 1 and np.sum(action[7:11]) == 0 and self._kicktimer < 231:
+                self._kicktimer += 1
+                action[0] = 1
+                action[-5] = 1
+                action_vec[-5] = 1
+                action_idle = NoAction
+                action_idle[0] = 1
+            else:
+                self._kicktimer = 0
+                self._iskicking = 0
+                action_idle = NoAction
+            obs, reward, terminated, truncated, info = self.env.step(action[:12])
+            total_reward += reward
+            #Aqui eu tenho que talvez mudar caso estja chutando para nao executar o NoAction
+            for _ in range(self.steps_between_actions):
+                obs, reward, terminated, truncated, info = self.env.step(action_idle)
+                total_reward += reward
+                if terminated or truncated:
+                    break
+        
+        self.last_actions = np.roll(self.last_actions, 1, 0)
+        self.last_actions[0] = action_vec
+        # Concatena obs de info + histórico de ações
+        return np.concatenate([obs, self.last_actions.flatten()]), total_reward, terminated, truncated, info
+    
+    def env_info(self):
+        return {
+            "Obs_type": "RAM + Actions",
+            "Act_type": "Actions with Specials",
+            "n_actions": self.n_actions,
+            "steps_between_actions": self.steps_between_actions
+        }
