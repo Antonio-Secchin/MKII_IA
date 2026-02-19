@@ -1,0 +1,61 @@
+======================================================================
+INFORMAÇÕES DO MODELO - STABLE BASELINES 3
+======================================================================
+
+Data de geração: 22/12/2025 13:28:14
+
+▶ ALGORITMO
+----------------------------------------------------------------------
+Classe do modelo: PPO
+
+▶ TREINAMENTO
+----------------------------------------------------------------------
+Timesteps treinados: 15001600
+Número de updates: 73250
+
+▶ HIPERPARÂMETROS PRINCIPAIS
+----------------------------------------------------------------------
+gamma               : 0.99
+learning_rate       : 0.0003
+batch_size          : 64
+n_steps             : 2048
+train_freq          : N/A
+buffer_size         : N/A
+
+▶ ARQUITETURA DA REDE NEURAL
+----------------------------------------------------------------------
+ActorCriticPolicy(
+  (features_extractor): FlattenExtractor(
+    (flatten): Flatten(start_dim=1, end_dim=-1)
+  )
+  (pi_features_extractor): FlattenExtractor(
+    (flatten): Flatten(start_dim=1, end_dim=-1)
+  )
+  (vf_features_extractor): FlattenExtractor(
+    (flatten): Flatten(start_dim=1, end_dim=-1)
+  )
+  (mlp_extractor): MlpExtractor(
+    (policy_net): Sequential(
+      (0): Linear(in_features=136, out_features=64, bias=True)
+      (1): Tanh()
+      (2): Linear(in_features=64, out_features=64, bias=True)
+      (3): Tanh()
+    )
+    (value_net): Sequential(
+      (0): Linear(in_features=136, out_features=64, bias=True)
+      (1): Tanh()
+      (2): Linear(in_features=64, out_features=64, bias=True)
+      (3): Tanh()
+    )
+  )
+  (action_net): Linear(in_features=64, out_features=12, bias=True)
+  (value_net): Linear(in_features=64, out_features=1, bias=True)
+)
+
+▶ CONFIGURAÇÕES DA POLICY (policy_kwargs)
+----------------------------------------------------------------------
+Nenhuma policy_kwargs definida.
+
+======================================================================
+FIM DO ARQUIVO
+======================================================================

@@ -1,0 +1,6 @@
+=== INFORMAÇÕES DO TREINO ===
+
+n_eval_episodes: 20
+eval_freq: 100
+env_info: RAM_env 
+ Action_space: actions
