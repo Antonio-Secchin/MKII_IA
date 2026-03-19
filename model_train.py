@@ -20,6 +20,20 @@ from env_wrappers import LastActionsWrapper, InfoActionHistoryWrapper, TestActio
 
 import multiprocessing
 
+'''
+['B']
+['A']
+[]
+['START']
+['UP']
+['DOWN']
+['LEFT']
+['RIGHT']
+['C']
+['Y']
+['X']
+['Z']
+'''
 
 #### Game States: #####
 ###
