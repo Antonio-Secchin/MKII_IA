@@ -105,6 +105,15 @@ This project investigates several Reinforcement Learning challenges, including:
 
 ---
 
+## Publication
+
+This repository accompanies my Bachelor's Thesis:
+
+**"Comparação de Técnicas de Aprendizado por Reforço para o Treinamento de Agentes Inteligentes em Jogos de Luta"**
+
+Available in:
+- Thesis PDF (`Docs/Comparação de Técnicas de Aprendizado por Reforço para o Treinamento de Agentes Inteligentes em Jogos de Luta.pdf`)
+
 ## Disclaimer
 
 This repository does not distribute copyrighted game ROMs. Users must provide their own legally obtained copy of Mortal Kombat II.
